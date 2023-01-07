@@ -14,6 +14,7 @@ import {
 import dagre from "dagre/dist/dagre.min.js"
 
 const selectedNodes = ref<string[]>([])
+const selectedEdges = ref<string[]>([])
 
 const graph = ref<vNG.VNetworkGraphInstance>()
 
@@ -56,7 +57,8 @@ const configs = reactive(
         }),
       },
     node: {
-      selectable: true,
+      selectable: node => node.selectable,
+      draggable: node => node.draggable,
       normal: { 
         radius: nodeSize / 2 ,
         color: n => (n.id === "node0" ? "#ff0000" : "#4466cc"),
@@ -65,6 +67,7 @@ const configs = reactive(
       
     },
     edge: {
+      selectable: true,
       normal: {
         color: "#aaa",
         width: 3,
@@ -157,6 +160,7 @@ const zoomLevel = ref(1.5)
     ref="graph"
     class="graph"
     v-model:selected-nodes="selectedNodes"
+    v-model:selected-edges="selectedEdges"
     v-model:zoom-level="zoomLevel"
     :nodes="data.nodes"
     :edges="data.edges"
