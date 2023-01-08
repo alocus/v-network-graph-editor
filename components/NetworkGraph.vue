@@ -63,8 +63,12 @@ const configs = reactive(
         radius: nodeSize / 2 ,
         color: n => (n.id === "node0" ? "#ff0000" : "#4466cc"),
       },
-      label: { direction: "center", color: "#fff" },
-      
+      label: { 
+        direction: "south",
+        //direction: "center", color: "#fff", 
+        visible: true,
+        directionAutoAdjustment: true,
+      },
     },
     edge: {
       selectable: true,
