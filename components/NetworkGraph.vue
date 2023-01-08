@@ -27,6 +27,34 @@ const selectedEdges = ref<string[]>([])
 
 const graph = ref<vNG.VNetworkGraphInstance>()
 
+
+function addNode() {
+  const nodeId = `node${nextNodeIndex.value}`
+  const name = `N${nextNodeIndex.value}`
+  nodes[nodeId] = { name }
+  nextNodeIndex.value++
+}
+
+function removeNode() {
+  for (const nodeId of selectedNodes.value) {
+    delete nodes[nodeId]
+  }
+}
+
+function addEdge() {
+  if (selectedNodes.value.length !== 2) return
+  const [source, target] = selectedNodes.value
+  const edgeId = `edge${nextEdgeIndex.value}`
+  edges[edgeId] = { source, target }
+  nextEdgeIndex.value++
+}
+
+function removeEdge() {
+  for (const edgeId of selectedEdges.value) {
+    delete edges[edgeId]
+  }
+}
+
 const nodeSize = 40
 
 const layoutsText = computed(() => {
@@ -76,7 +104,10 @@ const configs = reactive(
         }),
       },
     node: {
-      selectable: node => node.selectable,
+      // uncomment for node defined selectable 
+      //selectable: node => node.selectable,  
+      // select two nodes only for link creation
+      selectable: 2,
       draggable: node => node.draggable,
       normal: { 
         radius: nodeSize / 2 ,
@@ -187,11 +218,29 @@ const zoomLevel = ref(1.5)
 <template>
   <div class="demo-control-panel">
     <v-form>
+
       <v-checkbox v-model="configs.view.scalingObjects">Scaling objects</v-checkbox>
       <v-slider v-model="zoomLevel" ></v-slider>
       <v-checkbox v-model="d3ForceEnabled" label="D3-Force enabled" />
       <v-btn @click="updateLayout('LR')">Layout: Left to Right</v-btn>
       <v-btn @click="updateLayout('TB')">Layout: Top to Bottom</v-btn>
+
+      <div>
+      <label>Node:</label>
+      <v-btn @click="addNode">add</v-btn>
+      <v-btn :disabled="selectedNodes.length == 0" @click="removeNode"
+        >remove</v-btn
+      >
+    </div>
+    <div>
+      <label>Edge:</label>
+      <v-btn :disabled="selectedNodes.length != 2" @click="addEdge"
+        >add</v-btn
+      >
+      <v-btn :disabled="selectedEdges.length == 0" @click="removeEdge"
+        >remove</v-btn
+      >
+    </div>
   </v-form>
   </div>
   <v-network-graph
