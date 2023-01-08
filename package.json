@@ -11,6 +11,7 @@
     "@mdi/font": "^7.0.96",
     "@pinia/nuxt": "^0.4.6",
     "dagre": "^0.8.5",
+    "date-fns": "^2.29.3",
     "sass": "^1.57.1",
     "v-network-graph": "^0.8.1",
     "vuetify": "next"

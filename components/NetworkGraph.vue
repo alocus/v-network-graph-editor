@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from "vue"
 import * as vNG from "v-network-graph"
+import format from "date-fns/format"
 import data from "../stores/data"
 import {
   ForceLayout,
@@ -13,6 +14,8 @@ import {
 //@ts-ignore
 import dagre from "dagre/dist/dagre.min.js"
 
+
+
 const selectedNodes = ref<string[]>([])
 const selectedEdges = ref<string[]>([])
 
@@ -20,18 +23,28 @@ const graph = ref<vNG.VNetworkGraphInstance>()
 
 const nodeSize = 40
 
-
-const d3ForceEnabled = computed({
-  get: () => configs.view.layoutHandler instanceof ForceLayout,
-  set: (value: boolean) => {
-    if (value) {
-      configs.view.layoutHandler = new ForceLayout()
-    } else {
-      configs.view.layoutHandler = new vNG.SimpleLayout()
-    }
-  },
+const layoutsText = computed(() => {
+  return JSON.stringify(layouts.value, null, 2)
 })
 
+
+const EVENTS_COUNT = 6
+
+const eventLogs = reactive<[string, string, string][]>([])
+
+const eventHandlers: vNG.EventHandlers = {
+  // wildcard: capture all events
+  "*": (type, event) => {
+    const timestamp = format(new Date(), "HH:mm:ss.SSS")
+    if (eventLogs.length > EVENTS_COUNT) {
+      eventLogs.splice(EVENTS_COUNT, eventLogs.length - EVENTS_COUNT)
+    }
+    if (event instanceof Object && "event" in event) {
+      Object.assign(event, { event: "(...)" })
+    }
+    eventLogs.unshift([timestamp, type, JSON.stringify(event)])
+  },
+}
 
 const configs = reactive(
   vNG.defineConfigs({
@@ -87,6 +100,19 @@ const configs = reactive(
     },
   })
 )
+
+const d3ForceEnabled = computed({
+  get: () => configs.view.layoutHandler instanceof ForceLayout,
+  set: (value: boolean) => {
+    if (value) {
+      configs.view.layoutHandler = new ForceLayout()
+    } else {
+      configs.view.layoutHandler = new vNG.SimpleLayout()
+    }
+  },
+})
+
+
 function layout(direction: "TB" | "LR") {
   if (Object.keys(data.nodes).length <= 1 || Object.keys(data.edges).length == 0) {
     return
@@ -170,5 +196,37 @@ const zoomLevel = ref(1.5)
     :edges="data.edges"
     :layouts="data.layouts"
     :configs="configs"
+    :event-handlers="eventHandlers"
   /> 
+  <div class="event-logs">
+    <div
+      v-for="[timestamp, type, log] in eventLogs"
+      :key="`${timestamp}/${type}/${log}`"
+    >
+      {{ timestamp }}
+      <span class="event-type">{{ type }}</span>
+      {{ log }}
+    </div>
+  </div>
 </template>
+
+<style lang="css" scoped>
+.event-logs {
+  position: absolute;
+  inset: auto 10px 10px auto;
+  margin-left: 10px;
+  padding: 10px;
+  background: #ffff0044;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: monospace;
+  line-height: 11px;
+  pointer-events: none;
+}
+.event-logs div {
+  word-break: break-all;
+}
+.event-type {
+  font-weight: bold;
+}
+</style>
