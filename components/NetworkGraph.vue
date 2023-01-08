@@ -14,6 +14,12 @@ import {
 //@ts-ignore
 import dagre from "dagre/dist/dagre.min.js"
 
+const nodes: vNG.Nodes = reactive({ ...data.nodes })
+const edges: vNG.Edges = reactive({ ...data.edges })
+const layouts: vNG.Layouts = reactive({ ...data.layouts })
+
+const nextNodeIndex = ref(Object.keys(nodes).length + 1)
+const nextEdgeIndex = ref(Object.keys(edges).length + 1)
 
 
 const selectedNodes = ref<string[]>([])
@@ -24,7 +30,7 @@ const graph = ref<vNG.VNetworkGraphInstance>()
 const nodeSize = 40
 
 const layoutsText = computed(() => {
-  return JSON.stringify(layouts.value, null, 2)
+  return JSON.stringify(layouts, null, 2)
 })
 
 
@@ -180,11 +186,13 @@ const zoomLevel = ref(1.5)
 
 <template>
   <div class="demo-control-panel">
-    <v-checkbox v-model="configs.view.scalingObjects">Scaling objects</v-checkbox>
-    <v-slider v-model="zoomLevel" ></v-slider>
-    <v-checkbox v-model="d3ForceEnabled" label="D3-Force enabled" />
-    <v-btn @click="updateLayout('LR')">Layout: Left to Right</v-btn>
-    <v-btn @click="updateLayout('TB')">Layout: Top to Bottom</v-btn>
+    <v-form>
+      <v-checkbox v-model="configs.view.scalingObjects">Scaling objects</v-checkbox>
+      <v-slider v-model="zoomLevel" ></v-slider>
+      <v-checkbox v-model="d3ForceEnabled" label="D3-Force enabled" />
+      <v-btn @click="updateLayout('LR')">Layout: Left to Right</v-btn>
+      <v-btn @click="updateLayout('TB')">Layout: Top to Bottom</v-btn>
+  </v-form>
   </div>
   <v-network-graph
     ref="graph"
@@ -192,12 +200,14 @@ const zoomLevel = ref(1.5)
     v-model:selected-nodes="selectedNodes"
     v-model:selected-edges="selectedEdges"
     v-model:zoom-level="zoomLevel"
-    :nodes="data.nodes"
-    :edges="data.edges"
-    :layouts="data.layouts"
+
+    :nodes="nodes"
+    :edges="edges"
+    :layouts="layouts"
     :configs="configs"
     :event-handlers="eventHandlers"
   /> 
+  <pre class="layouts">{{ layoutsText }}</pre>
   <div class="event-logs">
     <div
       v-for="[timestamp, type, log] in eventLogs"
@@ -208,9 +218,20 @@ const zoomLevel = ref(1.5)
       {{ log }}
     </div>
   </div>
+  
 </template>
 
 <style lang="css" scoped>
+.layouts {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  padding: 10px;
+  background: #ffff0044;
+  border-radius: 4px;
+  font-size: 10px;
+  line-height: 11px;
+}
 .event-logs {
   position: absolute;
   inset: auto 10px 10px auto;
