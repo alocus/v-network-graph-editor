@@ -78,6 +78,20 @@ const eventHandlers: vNG.EventHandlers = {
     }
     eventLogs.unshift([timestamp, type, JSON.stringify(event)])
   },
+  "view:click": ({ event }) => {
+    if (!graph.value) return
+
+    const point = { x: event.offsetX, y: event.offsetY }
+    // translate coordinates: DOM -> SVG
+    const svgPoint = graph.value.translateFromDomToSvgCoordinates(point)
+
+    // add node and its position
+    const nodeId = `node${nextNodeIndex.value}`
+    const name = `N${nextNodeIndex.value}`
+    layouts.nodes[nodeId] = svgPoint
+    nodes[nodeId] = { name }
+    nextNodeIndex.value++
+  },
 }
 
 const configs = reactive(
